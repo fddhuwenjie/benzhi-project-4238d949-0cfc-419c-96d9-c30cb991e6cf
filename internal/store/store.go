@@ -16,6 +16,13 @@ type Repository interface {
 	FindByFingerprint(string) (*casepkg.EnvironmentIncident, error)
 	BindIdempotency(string, string, string) error
 	Idempotency(string) (string, string, bool)
+	// CreateWithIdempotency atomically persists a new incident and binds the
+	// idempotency key to it. When the key is empty or the incident already has
+	// a distinct idempotency binding, it behaves like Create. If the key is
+	// already bound to a different incident, the returned id identifies that
+	// incident and the error is ErrConflict so callers can reuse it instead of
+	// creating a duplicate.
+	CreateWithIdempotency(i *casepkg.EnvironmentIncident, key, fp string) (existingID string, err error)
 }
 type Memory struct {
 	mu           sync.RWMutex
@@ -62,6 +69,16 @@ func (m *Memory) FindByFingerprint(fp string) (*casepkg.EnvironmentIncident, err
 func (m *Memory) BindIdempotency(key, id, fp string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	return m.bindIdempotencyLocked(key, id, fp)
+}
+
+// bindIdempotencyLocked performs the idempotency binding assuming the write
+// lock is already held. It is shared by CreateWithIdempotency so that creating
+// an incident and binding its key cannot be split across concurrent requests.
+func (m *Memory) bindIdempotencyLocked(key, id, fp string) error {
+	if key == "" {
+		return nil
+	}
 	if x, ok := m.idempotency[key]; ok {
 		if x.ID == id && x.Fingerprint == fp {
 			return nil
@@ -70,6 +87,53 @@ func (m *Memory) BindIdempotency(key, id, fp string) error {
 	}
 	m.idempotency[key] = struct{ ID, Fingerprint string }{id, fp}
 	return nil
+}
+func (m *Memory) CreateWithIdempotency(i *casepkg.EnvironmentIncident, key, fp string) (string, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if key != "" {
+		if x, ok := m.idempotency[key]; ok {
+			// Key already bound by a concurrent request; caller must reuse the
+			// existing incident rather than creating a duplicate. This returns
+			// a conflict (not nil) so the workflow retrieves the stored record
+			// instead of returning its freshly constructed (unpersisted) copy.
+			return x.ID, casepkg.ErrConflict
+		}
+	}
+	if _, ok := m.data[i.ID]; ok {
+		return "", casepkg.ErrConflict
+	}
+	m.data[i.ID] = clone(i)
+	if i.Fingerprint != "" {
+		m.fingerprints[i.Fingerprint] = i.ID
+	}
+	if e := m.bindIdempotencyLocked(key, i.ID, fp); e != nil {
+		// Another request won the key between our check and the bind; undo the
+		// in-memory create so we do not leave a duplicate event behind.
+		delete(m.data, i.ID)
+		if i.Fingerprint != "" && m.fingerprints[i.Fingerprint] == i.ID {
+			delete(m.fingerprints, i.Fingerprint)
+		}
+		if x, ok := m.idempotency[key]; ok {
+			return x.ID, e
+		}
+		return "", e
+	}
+	if e := m.persistLocked(i); e != nil {
+		// Persistence failures must not leave a durable duplicate nor a bound
+		// key pointing at a half-written record.
+		delete(m.data, i.ID)
+		if i.Fingerprint != "" && m.fingerprints[i.Fingerprint] == i.ID {
+			delete(m.fingerprints, i.Fingerprint)
+		}
+		if key != "" {
+			if x, ok := m.idempotency[key]; ok && x.ID == i.ID {
+				delete(m.idempotency, key)
+			}
+		}
+		return "", e
+	}
+	return "", nil
 }
 func (m *Memory) Idempotency(key string) (string, string, bool) {
 	m.mu.RLock()
@@ -109,6 +173,14 @@ func (m *Memory) List() ([]*casepkg.EnvironmentIncident, error) {
 	return out, nil
 }
 func (m *Memory) persist(i *casepkg.EnvironmentIncident) error {
+	return m.persistLocked(i)
+}
+
+// persistLocked writes the durable snapshot. Callers must already hold m.mu
+// so that CreateWithIdempotency can persist atomically with the idempotency
+// binding; this prevents concurrent requests from observing a half-written
+// record under the same key.
+func (m *Memory) persistLocked(i *casepkg.EnvironmentIncident) error {
 	if m.dir == "" {
 		return nil
 	}

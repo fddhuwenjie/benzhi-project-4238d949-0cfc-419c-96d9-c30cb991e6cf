@@ -194,11 +194,17 @@ func (s *Service) CreateIncident(in CreateInput) (*casepkg.EnvironmentIncident, 
 	}
 	i.Tasks[tid] = &casepkg.ResponseTask{ID: tid, IncidentID: id, Assignee: assignee, DueAt: due, Instruction: "检查展柜环境并采取降温/除湿措施", Status: "open", Revision: 1}
 	i.AddEvent("task_assigned", in.CreatedBy, "处置任务已派发")
-	if e = s.repo.Create(i); e != nil {
+	// 创建与幂等键绑定必须在同一存储临界区内完成，否则两个并发请求会各自
+	// 创建事件而幂等索引只指向其中一个，造成重复派工与数据不一致。
+	existingID, e := s.repo.CreateWithIdempotency(i, in.IdempotencyKey, fp)
+	if e != nil {
+		if in.IdempotencyKey != "" && existingID != "" {
+			// 并发竞态：另一个相同幂等键的请求先创建了事件，复用该事件而非重复登记。
+			if ex, ge := s.repo.Get(existingID); ge == nil {
+				return ex, rules.Assessment{Level: ex.ImpactLevel, Deviation: ex.Assessment.Deviation, ThresholdHit: ex.Assessment.ThresholdHit, SensitivityAdjustment: ex.Assessment.SensitivityAdjustment, Explanation: ex.Assessment.Explanation}, casepkg.ErrConflict
+			}
+		}
 		return nil, a, e
-	}
-	if in.IdempotencyKey != "" {
-		_ = s.repo.BindIdempotency(in.IdempotencyKey, id, fp)
 	}
 	return i, a, nil
 }
