@@ -40,11 +40,15 @@ func (m *Memory) Create(i *casepkg.EnvironmentIncident) error {
 	if _, ok := m.data[i.ID]; ok {
 		return casepkg.ErrConflict
 	}
+	// 先落盘，确认成功后再提交内存中的聚合与指纹索引；落盘失败时内存保持原有状态。
+	if err := m.persist(i); err != nil {
+		return err
+	}
 	m.data[i.ID] = clone(i)
 	if i.Fingerprint != "" {
 		m.fingerprints[i.Fingerprint] = i.ID
 	}
-	return m.persist(i)
+	return nil
 }
 func (m *Memory) FindByFingerprint(fp string) (*casepkg.EnvironmentIncident, error) {
 	m.mu.RLock()
@@ -96,8 +100,11 @@ func (m *Memory) Save(i *casepkg.EnvironmentIncident, expected int) error {
 	if old.Revision != expected {
 		return casepkg.ErrConflict
 	}
-	// 先把新聚合和指纹索引写入内存，再落盘；落盘失败时这些修改不会自动回滚。
+	// 先落盘，确认成功后再提交内存中的聚合与指纹索引；落盘失败时内存仍保留原聚合与原指纹。
 	next := clone(i)
+	if err := m.persist(next); err != nil {
+		return err
+	}
 	m.data[i.ID] = next
 	if old.Fingerprint != "" && old.Fingerprint != next.Fingerprint {
 		delete(m.fingerprints, old.Fingerprint)
@@ -105,7 +112,7 @@ func (m *Memory) Save(i *casepkg.EnvironmentIncident, expected int) error {
 	if next.Fingerprint != "" {
 		m.fingerprints[next.Fingerprint] = next.ID
 	}
-	return m.persist(i)
+	return nil
 }
 func (m *Memory) List() ([]*casepkg.EnvironmentIncident, error) {
 	m.mu.RLock()
@@ -123,6 +130,20 @@ func (m *Memory) persist(i *casepkg.EnvironmentIncident) error {
 	if err := os.MkdirAll(m.dir, 0755); err != nil {
 		return err
 	}
+	// 先追加事件日志（幂等、只追加），再原子替换快照；快照替换是持久化提交点。
+	// 这样即便快照替换失败，磁盘上仍是原快照，内存也保持原状态，重启后不会读到未提交数据。
+	line, _ := json.Marshal(map[string]any{"incident_id": i.ID, "revision": i.Revision, "timeline": i.Timeline})
+	lf, err := os.OpenFile(filepath.Join(m.dir, "events.jsonl"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		return err
+	}
+	if _, err := lf.Write(append(line, '\n')); err != nil {
+		lf.Close()
+		return err
+	}
+	if err := lf.Close(); err != nil {
+		return err
+	}
 	b, _ := json.MarshalIndent(i, "", "  ")
 	tmp := filepath.Join(m.dir, i.ID+".tmp")
 	if err := os.WriteFile(tmp, b, 0644); err != nil {
@@ -131,12 +152,5 @@ func (m *Memory) persist(i *casepkg.EnvironmentIncident) error {
 	if err := os.Rename(tmp, filepath.Join(m.dir, i.ID+".json")); err != nil {
 		return err
 	}
-	lf, err := os.OpenFile(filepath.Join(m.dir, "events.jsonl"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
-	if err != nil {
-		return err
-	}
-	defer lf.Close()
-	line, _ := json.Marshal(map[string]any{"incident_id": i.ID, "revision": i.Revision, "timeline": i.Timeline})
-	_, err = lf.Write(append(line, '\n'))
-	return err
+	return nil
 }
