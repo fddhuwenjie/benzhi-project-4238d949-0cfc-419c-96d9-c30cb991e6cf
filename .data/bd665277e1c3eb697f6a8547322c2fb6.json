@@ -1,0 +1,141 @@
+{
+  "id": "bd665277e1c3eb697f6a8547322c2fb6",
+  "venue_id": "demo",
+  "zone": "A1",
+  "metric": "humidity",
+  "observed_value": 80,
+  "threshold": 50,
+  "observed_at": "2026-08-25T17:36:38Z",
+  "source": "sensor-1",
+  "sensitivity": "high",
+  "impact_level": "high",
+  "status": "verifying",
+  "revision": 7,
+  "created_by": "值守员",
+  "tasks": {
+    "09dc92aace15b976539d40a00faccc38": {
+      "id": "09dc92aace15b976539d40a00faccc38",
+      "incident_id": "bd665277e1c3eb697f6a8547322c2fb6",
+      "assignee": "值守员",
+      "due_at": "2026-08-25T17:41:38.761364317Z",
+      "instruction": "检查展柜环境并采取降温/除湿措施",
+      "status": "completed",
+      "measurements": {
+        "humidity": 50
+      },
+      "evidence_note": "采取措施并清理位置，结果湿度恢复",
+      "completed_at": "2026-08-25T17:36:38.76514039Z",
+      "completed_by": "值守员",
+      "revision": 3,
+      "claimed_by": "值守员",
+      "claimed_at": "2026-08-25T17:36:38.763605594Z",
+      "reminder_level": "escalated",
+      "evidence_fingerprint": "786f7b1efd449eeb089f41cbd60fab61c7446b88bdd9d99cd37e7c67b3978a7c",
+      "sla_hit": true,
+      "handling_minutes": 0.000025579933333333332
+    }
+  },
+  "verifications": [
+    {
+      "id": "2584e8d3da1d8fc86291b8b3116f951b",
+      "incident_id": "bd665277e1c3eb697f6a8547322c2fb6",
+      "window_start": "2026-08-25T17:34:38.766392923Z",
+      "window_end": "2026-08-25T17:36:38.766392923Z",
+      "samples": [
+        50,
+        51,
+        49
+      ],
+      "sample_times": [
+        "2026-08-25T17:34:38.766392923Z",
+        "2026-08-25T17:35:38.766392923Z",
+        "2026-08-25T17:36:38.766392923Z"
+      ],
+      "criteria": "humidity指标连续3个样本，恢复容差±1.500",
+      "passed": true,
+      "reviewer": "专员",
+      "reviewed_at": "2026-08-25T17:36:38.766691056Z",
+      "note": "连续观测正常",
+      "max_variation": 1,
+      "fingerprint": "9075814ba608dc51af44cc32efd5b1372a2cda260b285d5b875c054def7630d7"
+    }
+  ],
+  "timeline": [
+    {
+      "at": "2026-08-25T17:36:38.761454236Z",
+      "type": "incident_created",
+      "actor": "值守员",
+      "detail": "环境异常登记；来源sensor-1；漂移0分钟；校验时间接近服务时钟"
+    },
+    {
+      "at": "2026-08-25T17:36:38.761458215Z",
+      "type": "task_assigned",
+      "actor": "值守员",
+      "detail": "处置任务已派发"
+    },
+    {
+      "at": "2026-08-25T17:36:38.763605753Z",
+      "type": "task_claimed",
+      "actor": "值守员",
+      "detail": "任务已领取"
+    },
+    {
+      "at": "2026-08-25T17:36:38.763618467Z",
+      "type": "task_reminder",
+      "actor": "值守员",
+      "detail": "提醒级别escalated，距截止5分钟"
+    },
+    {
+      "at": "2026-08-25T17:36:38.765153857Z",
+      "type": "task_completed",
+      "actor": "值守员",
+      "detail": "现场措施与证据已记录，复测达标"
+    },
+    {
+      "at": "2026-08-25T17:36:38.766704944Z",
+      "type": "verification_second_required",
+      "actor": "专员",
+      "detail": "高敏感或高影响事件需要第二名独立复核人"
+    }
+  ],
+  "assessment": {
+    "level": "high",
+    "deviation": 0.6,
+    "threshold_hit": "达到50%边界",
+    "sensitivity_adjustment": "high敏感度提升最低等级并采用更严格容差",
+    "explanation": "humidity绝对偏差60.0%，命中达到50%边界，high敏感度提升最低等级并采用更严格容差",
+    "cumulative_deviation": 30,
+    "cumulative_count": 1,
+    "contributing_incident_ids": [
+      "bd665277e1c3eb697f6a8547322c2fb6"
+    ],
+    "escalation_threshold": "累计偏差升级边界：4次或累计偏差达到阈值",
+    "cumulative_fallback": "历史事件缺失，已降级为单次评估"
+  },
+  "fingerprint": "41cf65b576678480b59745d669cb7aee6084b700e79d505f8486d108e200a64e",
+  "validation_hits": [
+    "来源前缀校验通过",
+    "时间漂移0分钟，结论：时间接近服务时钟",
+    "来源可靠度100/100，窗口720h0m0s，结论：来源可靠"
+  ],
+  "drift_level": "normal",
+  "source_trusted": true,
+  "source_validation": "来源前缀校验通过",
+  "rule_version": "v1",
+  "assessment_history": [
+    {
+      "version": "v1",
+      "sensitivity": "high",
+      "observed_value": 80,
+      "threshold": 50,
+      "level": "high",
+      "deviation": 0.6,
+      "threshold_hit": "达到50%边界",
+      "explanation": "humidity绝对偏差60.0%，命中达到50%边界，high敏感度提升最低等级并采用更严格容差",
+      "at": "2026-08-25T17:36:38.761364317Z"
+    }
+  ],
+  "source_reliability": 100,
+  "source_score_window": "720h0m0s",
+  "source_review_conclusion": "来源可靠"
+}

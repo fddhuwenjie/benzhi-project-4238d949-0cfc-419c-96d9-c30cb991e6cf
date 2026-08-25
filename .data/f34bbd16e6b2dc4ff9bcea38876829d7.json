@@ -1,0 +1,95 @@
+{
+  "id": "f34bbd16e6b2dc4ff9bcea38876829d7",
+  "venue_id": "demo",
+  "zone": "D3",
+  "metric": "humidity",
+  "observed_value": 55,
+  "threshold": 50,
+  "observed_at": "2026-08-25T16:36:38Z",
+  "source": "gateway-drift",
+  "sensitivity": "normal",
+  "impact_level": "low",
+  "status": "assessed",
+  "revision": 4,
+  "created_by": "值守员",
+  "tasks": {
+    "21c82dceab221bfb43a0f2cbf129bba6": {
+      "id": "21c82dceab221bfb43a0f2cbf129bba6",
+      "incident_id": "f34bbd16e6b2dc4ff9bcea38876829d7",
+      "assignee": "安全主管",
+      "due_at": "2026-08-25T18:36:38.772066155Z",
+      "instruction": "检查展柜环境并采取降温/除湿措施",
+      "status": "open",
+      "revision": 1
+    }
+  },
+  "verifications": null,
+  "timeline": [
+    {
+      "at": "2026-08-25T17:36:38.772979881Z",
+      "type": "source_review_required",
+      "actor": "值守员",
+      "detail": "来源可靠度55低于审查阈值60，首个任务交由安全主管"
+    },
+    {
+      "at": "2026-08-25T17:36:38.772982327Z",
+      "type": "incident_created",
+      "actor": "值守员",
+      "detail": "环境异常登记；来源gateway-drift；漂移-60分钟；校验严重时间漂移"
+    },
+    {
+      "at": "2026-08-25T17:36:38.773009014Z",
+      "type": "task_assigned",
+      "actor": "值守员",
+      "detail": "处置任务已派发"
+    }
+  ],
+  "assessment": {
+    "level": "low",
+    "deviation": 0.1,
+    "threshold_hit": "低于25%",
+    "sensitivity_adjustment": "无调整",
+    "explanation": "humidity绝对偏差10.0%，命中低于25%，无调整",
+    "cumulative_deviation": 5,
+    "cumulative_count": 1,
+    "contributing_incident_ids": [
+      "f34bbd16e6b2dc4ff9bcea38876829d7"
+    ],
+    "escalation_threshold": "累计偏差升级边界：4次或累计偏差达到阈值"
+  },
+  "fingerprint": "6e1a8535d701fc9d4a762cb03bf8a5c3010d2a6151930933ee785a7f4fe6360c",
+  "validation_hits": [
+    "来源前缀校验通过",
+    "时间漂移-60分钟，结论：严重时间漂移",
+    "来源可靠度55/100，窗口720h0m0s，结论：来源待核验",
+    "扣分明细：严重时间漂移-20、严重时间漂移-20、重复命中-5",
+    "漂移等级：severe"
+  ],
+  "drift_level": "severe",
+  "drift_minutes": -60,
+  "source_trusted": false,
+  "source_validation": "来源前缀校验通过",
+  "rule_version": "v1",
+  "assessment_history": [
+    {
+      "version": "v1",
+      "sensitivity": "normal",
+      "observed_value": 55,
+      "threshold": 50,
+      "level": "low",
+      "deviation": 0.1,
+      "threshold_hit": "低于25%",
+      "explanation": "humidity绝对偏差10.0%，命中低于25%，无调整",
+      "at": "2026-08-25T17:36:38.772066155Z"
+    }
+  ],
+  "source_reliability": 55,
+  "source_score_window": "720h0m0s",
+  "source_review_conclusion": "来源待核验",
+  "source_pending_verification": true,
+  "source_penalty_details": [
+    "严重时间漂移-20",
+    "严重时间漂移-20",
+    "重复命中-5"
+  ]
+}
