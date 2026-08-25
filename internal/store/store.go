@@ -96,7 +96,15 @@ func (m *Memory) Save(i *casepkg.EnvironmentIncident, expected int) error {
 	if old.Revision != expected {
 		return casepkg.ErrConflict
 	}
-	m.data[i.ID] = clone(i)
+	// 先把新聚合和指纹索引写入内存，再落盘；落盘失败时这些修改不会自动回滚。
+	next := clone(i)
+	m.data[i.ID] = next
+	if old.Fingerprint != "" && old.Fingerprint != next.Fingerprint {
+		delete(m.fingerprints, old.Fingerprint)
+	}
+	if next.Fingerprint != "" {
+		m.fingerprints[next.Fingerprint] = next.ID
+	}
 	return m.persist(i)
 }
 func (m *Memory) List() ([]*casepkg.EnvironmentIncident, error) {
