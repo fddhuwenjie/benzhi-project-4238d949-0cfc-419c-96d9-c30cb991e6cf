@@ -1,0 +1,82 @@
+{
+  "id": "3a772908484cb4a783d14fc05dafe5f7",
+  "venue_id": "demo",
+  "zone": "D1",
+  "metric": "humidity",
+  "observed_value": 55,
+  "threshold": 50,
+  "observed_at": "2026-08-25T16:41:52Z",
+  "source": "gateway-drift",
+  "sensitivity": "normal",
+  "impact_level": "low",
+  "status": "assessed",
+  "revision": 3,
+  "created_by": "值守员",
+  "tasks": {
+    "ba24170339c85210cea3d67adac0062a": {
+      "id": "ba24170339c85210cea3d67adac0062a",
+      "incident_id": "3a772908484cb4a783d14fc05dafe5f7",
+      "assignee": "值守员",
+      "due_at": "2026-08-25T18:01:52.270673181Z",
+      "instruction": "检查展柜环境并采取降温/除湿措施",
+      "status": "open",
+      "revision": 1
+    }
+  },
+  "verifications": null,
+  "timeline": [
+    {
+      "at": "2026-08-25T17:01:52.271112795Z",
+      "type": "incident_created",
+      "actor": "值守员",
+      "detail": "环境异常登记；来源gateway-drift；漂移-20分钟；校验严重时间漂移"
+    },
+    {
+      "at": "2026-08-25T17:01:52.271116295Z",
+      "type": "task_assigned",
+      "actor": "值守员",
+      "detail": "处置任务已派发"
+    }
+  ],
+  "assessment": {
+    "level": "low",
+    "deviation": 0.1,
+    "threshold_hit": "低于25%",
+    "sensitivity_adjustment": "无调整",
+    "explanation": "humidity绝对偏差10.0%，命中低于25%，无调整",
+    "cumulative_deviation": 5,
+    "cumulative_count": 1,
+    "contributing_incident_ids": [
+      "3a772908484cb4a783d14fc05dafe5f7"
+    ],
+    "escalation_threshold": "累计偏差升级边界：4次或累计偏差达到阈值"
+  },
+  "fingerprint": "51cb1fd10d8bb02bb1820055d6915bc996d193affd427ec957c794bd563d454b",
+  "validation_hits": [
+    "来源前缀校验通过",
+    "时间漂移-20分钟，结论：严重时间漂移",
+    "来源可靠度100/100，窗口720h0m0s，结论：来源可靠",
+    "漂移等级：severe"
+  ],
+  "drift_level": "severe",
+  "drift_minutes": -20,
+  "source_trusted": false,
+  "source_validation": "来源前缀校验通过",
+  "rule_version": "v1",
+  "assessment_history": [
+    {
+      "version": "v1",
+      "sensitivity": "normal",
+      "observed_value": 55,
+      "threshold": 50,
+      "level": "low",
+      "deviation": 0.1,
+      "threshold_hit": "低于25%",
+      "explanation": "humidity绝对偏差10.0%，命中低于25%，无调整",
+      "at": "2026-08-25T17:01:52.270673181Z"
+    }
+  ],
+  "source_reliability": 100,
+  "source_score_window": "720h0m0s",
+  "source_review_conclusion": "来源可靠"
+}
